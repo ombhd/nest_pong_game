@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Game</h1>
+
+    <button id="btn_join">Join Game</button>
+    <br>
+    <br>
+    <canvas></canvas>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // const ball = document.querySelector('circle');
+        let socket = io('http://localhost:3000');
+        // console.log(ball)
+        // ball.cy.animVal.value = 200;
+        // ball.cx.animVal.value = 400;
+        socket.on('connect', function() {
+            console.log('connected');
+        });
+
+        socket.on('message', function(message) {
+            console.log(message);
+        });
+
+        socket.on('disconnect', function() {
+            console.log('disconnected');
+        });
+
+        socket.on('game_state', (game) => {
+            // ball.cy = game.ball.y;
+            // ball.cx = game.ball.x;
+            console.log(game.ball);
+        })
+
+        // socket.on('game_state_ball', (game) => {
+        //     console.log(game);
+        // })
+
+        socket.on('game_winner', () => {
+            alert('You won');
+        });
+
+        document.querySelector('#btn_join').addEventListener('click', function() {
+            socket.emit('join_queue_match');
+        });
+
+
+        // update ball cordinates depending on the game state
+    </script>
+</body>
+
+</html>
