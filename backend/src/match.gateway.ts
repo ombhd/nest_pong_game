@@ -25,6 +25,7 @@ interface Ball {
   dx: number;
   dy: number;
   DXY: number;
+  goalScoring: boolean;
 }
 
 interface Game {
@@ -45,24 +46,29 @@ interface Match {
 enum GameState{
   WAITING,
   PLAYING,
-  OVER
+  PAUSED,
+  OVER,
 }
 
 
-
+// canvas dimensions
 const WIDTH = 800;
 const HEIGHT = 600;
+// game state and score
+const MAX_SCORE = 10;
+const FPS = 1000 / 40;
+// ball dimensions and speed
 const BALL_RADIUS = 9;
 const INIT_DXY = 8;
 const MAX_DXY = 19;
+// paddle dimensions and speed
 const DYP_INIT = 0;
-const DYP = 4;
-const FPS = 1000 / 40;
-const PADDLE_MV_FREQ = FPS / 4;
+const DYP = 6;
+const PADDLE_MV_FREQ = FPS / 2;
 const PADDLE_HEIGHT = HEIGHT / 6;
 const PADDLE_WIDTH = 10;
+const PADDLE_BORDER_RADIUS = PADDLE_WIDTH / 2;
 const PADDLE_INIT_Y = (HEIGHT / 2) - (PADDLE_HEIGHT / 2);
-const MAX_SCORE = 10;
 
 
 @WebSocketGateway(5000, { cors: { origin: '*' } })
@@ -184,9 +190,10 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
     }
   }
 
-
 // WIDTH 600 x HEIGHT 400
   private startNewGame() {
+
+    this.goals = 0;
     let pd1 : Paddle = {
       y: PADDLE_INIT_Y,
       dypaddle: DYP_INIT,
@@ -218,7 +225,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
         y: HEIGHT / 2, 
         dx: 1,
         dy: 1,
-        DXY: INIT_DXY
+        DXY: INIT_DXY,
+        goalScoring: false,
       },
       hits: 0
     };
@@ -235,6 +243,13 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
 
   private checkIsWinner(player: Player): boolean {
     return player.score === MAX_SCORE;
+  }
+
+  // reset ball speed
+  private resetBall(ball: Ball) {
+    ball.DXY = INIT_DXY;
+    ball.x = WIDTH / 2;
+    ball.y = HEIGHT / 2;
   }
 
   // increment score
@@ -255,83 +270,99 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   private async recordGoal(player: Player, game: Game) {
     game.ball.dx *= player.score % 2 === 0 ? -1 : 1;
     game.ball.dy *= player.score % 2 === 0 ? -1 : 1;
-    this.logger.log(`in first: Ball position: ${game.ball.x}, ${game.ball.y}`);
+    this.logger.log(`in first recording: Ball position: ${game.ball.x}, ${game.ball.y}`);
     this.incrementScore(player, game);
     game.ball.DXY = 0;
     // print ball position
-    this.logger.log(`hello man`);
-    this.logger.log(`Ball position: ${game.ball.x}, ${game.ball.y}`);
-    await this.delay(500);
+    // this.logger.log(`hello man`);
+    // this.logger.log(`Ball position: ${game.ball.x}, ${game.ball.y}`);
+    await this.delay(2000);
     // this.resetBall(game.ball);
     game.ball.DXY = INIT_DXY;
+    game.ball.goalScoring = false;
     this.logger.log(`number of goals: ${++this.goals}`);
     this.logger.log(`Ball position: ${game.ball.x}, ${game.ball.y}`);
   }
+  
+  private moveBall(ball: Ball) {
+    ball.x += (ball.DXY * ball.dx);
+    ball.y += (ball.DXY * ball.dy);
+  }
+
+  private setVBallScoring(ball: Ball) {
+    
+  }
 
   private checkVerticalCollision(game: Game) {
-    if (game.ball.x + BALL_RADIUS + PADDLE_WIDTH > WIDTH) {
+    if (game.ball.x + BALL_RADIUS + PADDLE_WIDTH >= WIDTH) {
       // check if the ball will hit the paddle
-      if (game.ball.y + BALL_RADIUS >= (game.player2.paddleMv.paddle.y - (PADDLE_WIDTH / 2)) && 
-        game.ball.y - BALL_RADIUS <= game.player2.paddleMv.paddle.y  + PADDLE_HEIGHT + (PADDLE_WIDTH / 2)) 
-      {
-        if (++game.hits > 10){
-          game.ball.DXY+=3;
-          if (game.ball.DXY > MAX_DXY) {
-            game.ball.DXY = MAX_DXY;
-          }
-          game.hits = 0;
-        }
-        game.ball.dx *= -1;
-      }
-      else if (game.ball.x > WIDTH + (BALL_RADIUS * 3))
+      if (game.ball.x > WIDTH + (BALL_RADIUS * 2))
       {
         this.recordGoal(game.player1, game);
         game.hits = 0;
       }
-    }
-    if (game.ball.x < BALL_RADIUS + PADDLE_WIDTH) {
-      // check if the ball will hit the paddle
-      if (game.ball.y + BALL_RADIUS >= (game.player1.paddleMv.paddle.y - (PADDLE_WIDTH / 2)) && 
-        game.ball.y - BALL_RADIUS  <= game.player1.paddleMv.paddle.y + PADDLE_HEIGHT + (PADDLE_WIDTH / 2)) 
+      else if (game.ball.y + BALL_RADIUS >= (game.player2.paddleMv.paddle.y - PADDLE_BORDER_RADIUS) && 
+      game.ball.y - BALL_RADIUS <= game.player2.paddleMv.paddle.y + PADDLE_HEIGHT + PADDLE_BORDER_RADIUS) 
       {
-        if (++game.hits > 10){
+        if (++game.hits > 10 && game.ball.DXY > 0) {
           game.ball.DXY+=3;
           if (game.ball.DXY > MAX_DXY) {
             game.ball.DXY = MAX_DXY;
           }
           game.hits = 0;
         }
-        game.ball.dx *= -1;
+        if (!game.ball.goalScoring){
+          game.ball.dx *= -1;
+        }
       }
-      else if (game.ball.x < -(BALL_RADIUS * 3))
+      else if (game.ball.x + BALL_RADIUS + PADDLE_WIDTH > WIDTH) {
+        game.ball.goalScoring = true;
+      }
+    }
+    else if (game.ball.x <= BALL_RADIUS + PADDLE_WIDTH) {
+      // check if the ball will hit the paddle
+      if (game.ball.x < - (BALL_RADIUS * 2))
       {
         this.recordGoal(game.player2, game);
         game.hits = 0;
       }
+      else if (game.ball.y + BALL_RADIUS >= (game.player1.paddleMv.paddle.y - PADDLE_BORDER_RADIUS) && 
+      game.ball.y - BALL_RADIUS  <= game.player1.paddleMv.paddle.y + PADDLE_HEIGHT + PADDLE_BORDER_RADIUS) 
+      {
+        if (++game.hits > 10 && game.ball.DXY > 0){
+          game.ball.DXY+=3;
+          if (game.ball.DXY > MAX_DXY) {
+            game.ball.DXY = MAX_DXY;
+          }
+          game.hits = 0;
+        }
+        if (!game.ball.goalScoring){
+          game.ball.dx *= -1;
+        }
+      }
+      else if (game.ball.x < BALL_RADIUS + PADDLE_WIDTH) {
+        game.ball.goalScoring = true;
+      }
     }
-    if (game.ball.y + BALL_RADIUS > HEIGHT) {
+    if (game.ball.y + BALL_RADIUS >= HEIGHT) {
       game.ball.dy *= -1;
     }
-    if (game.ball.y < BALL_RADIUS) {
+    else if (game.ball.y <= BALL_RADIUS) {
       game.ball.dy *= -1;
     }
-    game.ball.x += (game.ball.DXY * game.ball.dx);
-    game.ball.y +=( game.ball.DXY * game.ball.dy);
+    this.moveBall(game.ball);
   }
 
   private getGameState(game: Game): GameState {
     if (game.player1.score === MAX_SCORE || game.player2.score === MAX_SCORE) {
       return GameState.OVER;
     }
+    else if (game.ball.DXY === 0) {
+      return GameState.PAUSED;
+    }
     return GameState.PLAYING;
   }
 
-  // reset ball speed
-  private resetBall(ball: Ball) {
-    ball.DXY = INIT_DXY;
-    ball.x = WIDTH / 2;
-    ball.y = HEIGHT / 2;
-  }
 
   // stop a game
   private stopGame(game: Game) {
