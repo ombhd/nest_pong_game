@@ -270,18 +270,11 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   private async recordGoal(player: Player, game: Game) {
     game.ball.dx *= player.score % 2 === 0 ? -1 : 1;
     game.ball.dy *= player.score % 2 === 0 ? -1 : 1;
-    this.logger.log(`in first recording: Ball position: ${game.ball.x}, ${game.ball.y}`);
     this.incrementScore(player, game);
     game.ball.DXY = 0;
-    // print ball position
-    // this.logger.log(`hello man`);
-    // this.logger.log(`Ball position: ${game.ball.x}, ${game.ball.y}`);
     await this.delay(2000);
-    // this.resetBall(game.ball);
     game.ball.DXY = INIT_DXY;
     game.ball.goalScoring = false;
-    this.logger.log(`number of goals: ${++this.goals}`);
-    this.logger.log(`Ball position: ${game.ball.x}, ${game.ball.y}`);
   }
   
   private moveBall(ball: Ball) {
