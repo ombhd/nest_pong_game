@@ -14,7 +14,7 @@ interface PaddleMovement {
 }
 
 interface Player {
-  socket?: Socket;
+  socket: Socket;
   score: number;
   paddleMv: PaddleMovement;
 }
@@ -116,6 +116,8 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
   }
 
   private removeGamePlayers(game: Game) {
+    clearInterval(game.player1.paddleMv.interval);
+    clearInterval(game.player2.paddleMv.interval);
     this.queue.splice(this.queue.indexOf(game.player1.socket), 1);
     this.queue.splice(this.queue.indexOf(game.player2.socket), 1);
     this.unique.delete(game.player1.socket);
@@ -142,7 +144,7 @@ export class MatchGateway implements OnGatewayConnection, OnGatewayDisconnect, O
       return;
     }
     if (paddle.y < (PADDLE_WIDTH / 2)) {
-      paddle.y = 0 + (PADDLE_WIDTH / 2);
+      paddle.y = (PADDLE_WIDTH / 2);
       paddle.dypaddle = 0;
       return;
     }

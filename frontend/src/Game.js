@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import socket from "./socket"
+import socket from "./socket";
 import './index.css';
 
 const Game = () => {
@@ -51,7 +51,6 @@ const Game = () => {
 
   useEffect(() => {
     document.addEventListener('keydown', (e) => {
-      console.log(e);
       if (e.code === 'ArrowUp') {
         socket.emit('up_paddle', 'down');
       } else if (e.code === 'ArrowDown')
@@ -60,7 +59,6 @@ const Game = () => {
       }
     });
     document.addEventListener('keyup', (e) => {
-      console.log(e);
       if (e.code === 'ArrowUp') {
         socket.emit('up_paddle', 'up');
       } else if (e.code === 'ArrowDown')
