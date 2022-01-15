@@ -15,10 +15,10 @@ const Game = () => {
   const R_PADDLE_X = WIDTH - PADDLE_WIDTH;
   const PADDLE_INIT_Y = (HEIGHT / 2) - (PADDLE_HEIGHT / 2);
 // game states
-  const WAITING = 0;
-  const PLAYING = 1;
-  const PAUSED = 2;
-  const OVER = 3;
+  const WAITING = 'WAITING';
+  const PLAYING = 'PLAYING';
+  const PAUSED = 'PAUSED';
+  const OVER = 'OVER';
 
   // initial state
   const initialState = {
@@ -35,19 +35,19 @@ const Game = () => {
       p2: 0
     },
     state: WAITING,
-    is_winner: false
+    hasWon: false
   }
   // state of the frame
   const [frame, setframe] = useState(initialState)
   
-  socket.on("game_state", (newFrame) => {
+  socket.on("state", (newFrame) => {
     setframe(newFrame);
   })
 
-  async function delay(ms)
-  {
-    await Promise (_ => setTimeout((_) => {}, ms));
-  }
+  // async function delay(ms)
+  // {
+  //   await Promise (_ => setTimeout((_) => {}, ms));
+  // }
 
   useEffect(() => {
     document.addEventListener('keydown', (e) => {
@@ -117,19 +117,17 @@ const Game = () => {
 
     function draw() {
       clear_init();
+      console.log(frame);
       draw_text(frame.score.p1, "#FFFFFF", "50px gameFont", 3 * (WIDTH / 8), HEIGHT / 12);
       draw_text(frame.score.p2, "#FFFFFF", "50px gameFont", 5 * (WIDTH / 8) - 5, HEIGHT / 12);
-      if (frame.state !== PAUSED)
-      {
-        draw_ball("#FFEE00", frame.ball.x, frame.ball.y, BALL_RADIUS); 
-      }
+      draw_ball("#FFEE00", frame.ball.x, frame.ball.y, BALL_RADIUS); 
       draw_paddle("#00D897",L_PADDLE_X ,frame.paddles.ly);
       draw_paddle("#FF6B6B",R_PADDLE_X ,frame.paddles.ry);
       
       if (frame.state === OVER)
       {
         draw_text('Game Over', "#FFFFFF", "50px gameFont", (WIDTH / 2) - 115, HEIGHT / 3);
-        if (frame.is_winner)
+        if (frame.hasWon)
           draw_text('You Won', "#00FF15", "80px gameFont", (WIDTH / 2) - 150, 2 * (HEIGHT / 3));
         else
           draw_text('You Lost', "#FF0000", "80px gameFont", (WIDTH / 2) - 150, 2 * (HEIGHT / 3));
