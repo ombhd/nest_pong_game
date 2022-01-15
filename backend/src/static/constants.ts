@@ -1,21 +1,32 @@
+
+class Constants{
 // map dimensions
-const MAP_WIDTH = 1000;
-const MAP_HEIGHT = 600;
+static readonly MAP_WIDTH = 800;
+static readonly MAP_HEIGHT = 600;
 
 // game config and score
-const FPS = 1000 / 30;
-const MAX_SCORE = 10;
+static readonly FPS = 1000 / 30;
+static readonly MAX_SCORE = 10;
+static readonly MAX_WATCHERS = 10;
+static readonly MAX_DISTANCE_FROM_MAP_EDGE = Constants.MAP_WIDTH / 4;
 
 // ball dimensions and speed
-const BALL_RADIUS = 9;
-const BALL_INIT_MV_AMOUNT = 8;
-const BALL_MAX_MV_AMOUNT = 19;
+static readonly BALL_RADIUS = 9;
+static readonly BALL_INIT_MV_AMOUNT = 8;
+static readonly BALL_MAX_MV_AMOUNT = 20;
+static readonly BALL_MV_AMOUNT_INCREASE = 3;
+static readonly MAX_HITS_BEFORE_INCREASE = 6;
 
 // paddle dimensions and speed
-const PADDLE_MV_AMOUNT_INIT = 0;
-const PADDLE_MV_AMOUNT = 6;
-const PADDLE_MV_FREQ = FPS / 2;
-const PADDLE_HEIGHT = MAP_HEIGHT / 6;
-const PADDLE_WIDTH = 10;
-const PADDLE_BORDER_RADIUS = PADDLE_WIDTH / 2;
-const PADDLE_INIT_Y = (MAP_HEIGHT / 2) - (PADDLE_HEIGHT / 2);
+static readonly PADDLE_WIDTH = 10;
+static readonly LEFT_PADDLE_X = Constants.PADDLE_WIDTH;
+static readonly RIGHT_PADDLE_X = Constants.MAP_WIDTH - Constants.PADDLE_WIDTH;
+static readonly PADDLE_MV_AMOUNT_INIT = 0;
+static readonly PADDLE_MV_AMOUNT = 6;
+static readonly PADDLE_MV_FREQ = Constants.FPS / 2;
+static readonly PADDLE_HEIGHT = Constants.MAP_HEIGHT / 6;
+static readonly PADDLE_BORDER_RADIUS = Constants.PADDLE_WIDTH / 2;
+static readonly PADDLE_INIT_Y = (Constants.MAP_HEIGHT / 2) - (Constants.PADDLE_HEIGHT / 2);
+}
+
+export default Constants;
