@@ -22,6 +22,7 @@ class Player {
       Constants.PADDLE_MV_FREQ,
     );
   }
+  
 
   // increment score by 1 if it is less than MAX_SCORE,
   // and return true if the new score is MAX_SCORE,

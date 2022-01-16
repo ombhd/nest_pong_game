@@ -40,19 +40,8 @@ export class MatchGateway
     if (game) {
       game.handlePlayerDisconnect(client);
       game.stop();
-      // this.removeGamePlayers(m.game);
-      // this.matches.splice(this.matches.indexOf(m), 1);
     }
   }
-
-  // private removeGamePlayers(game: Game) {
-  //   clearInterval(game.player1.paddleMv.interval);
-  //   clearInterval(game.player2.paddleMv.interval);
-  //   this.queue.splice(this.queue.indexOf(game.player1.socket), 1);
-  //   this.queue.splice(this.queue.indexOf(game.player2.socket), 1);
-  //   this.unique.delete(game.player1.socket);
-  //   this.unique.delete(game.player2.socket);
-  // }
 
   afterInit(server: any) {
     this.logger.log('Initialized');
@@ -84,14 +73,18 @@ export class MatchGateway
     }
   }
 
+  private _removeOverGame(game: Game): void 
+  {
+    const sockets = game.getSockets();
+    this.unique.delete(sockets[0]);
+    this.unique.delete(sockets[1]);
+    this.games.splice(this.games.indexOf(game), 1);
+    console.log('removeOverGame : ' + game.getId());
+    this.logger.log(`number of current games: ${this.games.length}`);
+  }
+
   @SubscribeMessage('join_queue_match')
   joinQueue(client: Socket, payload: any) {
-    let game = this.games.find((gm) => gm.hasSocket(client));
-    if (game && game.hasSocket(client) && game.isOver()) {
-      this.unique.delete(client);
-      
-      this.games.splice(this.games.indexOf(game), 1);
-    }
     if (this.unique.has(client)) {
       return;
     }
@@ -103,6 +96,7 @@ export class MatchGateway
         new Game(
           new Player(this.queue.shift(), false),
           new Player(this.queue.shift(), true),
+          this._removeOverGame.bind(this),
         ),
       );
     }

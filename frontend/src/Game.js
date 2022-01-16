@@ -44,11 +44,6 @@ const Game = () => {
     setframe(newFrame);
   })
 
-  // async function delay(ms)
-  // {
-  //   await Promise (_ => setTimeout((_) => {}, ms));
-  // }
-
   useEffect(() => {
     document.addEventListener('keydown', (e) => {
       if (e.code === 'ArrowUp') {

@@ -56,8 +56,8 @@ class Paddle {
 
   public isAlignedWithBall(ball: Ball): boolean {
     return (
-      this._y + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS >= ball.getY() &&
-      this._y - Constants.PADDLE_BORDER_RADIUS <= ball.getY()
+      this._y + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS + (Math.abs(this._yMvAmount) * 3) >= ball.getY() &&
+      this._y - Constants.PADDLE_BORDER_RADIUS - (Math.abs(this._yMvAmount) * 3) <= ball.getY()
     );
   }
 

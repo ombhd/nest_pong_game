@@ -27,13 +27,15 @@ class Game {
   private _watchers: Socket[] = [];
   private _ball: Ball;
   private _interval: NodeJS.Timer;
+  private _endCallback: Function;
 
-  constructor(player1: Player, player2: Player) {
+  constructor(player1: Player, player2: Player, endCallback: Function) {
     this._id = this._generateId();
     this._player1 = player1;
     this._player2 = player2;
     this._ball = new Ball();
     this._interval = setInterval(() => this.play(), Constants.FPS);
+    this._endCallback = endCallback;
   }
 
   public restart(): void {
@@ -57,7 +59,9 @@ class Game {
     return id;
   }
 
-  public;
+  public getId(): string {
+    return this._id;
+  }
 
   public getGameState(): GameStateEnum {
     if (
@@ -120,10 +124,6 @@ class Game {
     );
   }
 
-  public async pauseTheGame(ms: number): Promise<void>  {
-    
-  }
-
   private async awardAndPause(player: Player): Promise<void> {
     this._player1.award();
     this._ball.reset();
@@ -164,6 +164,10 @@ class Game {
     return null;
   }
 
+  public getSockets(): Socket[] {
+    return [this._player1.getSocket(), this._player2.getSocket()];
+  }
+
   public handlePlayerDisconnect(socket: Socket): void {
     if (socket.id === this._player1.getSocket().id) {
       this._player1.penalize();
@@ -180,6 +184,7 @@ class Game {
     clearInterval(this._interval);
     this._player1.disconnect();
     this._player2.disconnect();
+    this._endCallback(this);
   }
 
   public isOver(): boolean {
