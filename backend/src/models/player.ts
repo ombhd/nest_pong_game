@@ -51,10 +51,6 @@ class Player {
   // return true if the score is Constants.MAX_SCORE,
   // otherwise return false
   public hasWon(): boolean {
-    console.log(
-      `player in ${this._isRightSide ? 'right' : 'left'} : ${this._score}`,
-    );
-
     return this._score === Constants.MAX_SCORE;
   }
 

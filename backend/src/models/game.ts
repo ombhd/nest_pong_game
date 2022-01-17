@@ -3,6 +3,7 @@ import { GameStateEnum } from '../static/enums';
 import Constants from '../static/constants';
 import Ball from './ball';
 import Player from './player';
+import Paddle from './paddle';
 
 interface BroadcastObject {
   ball: {
@@ -12,30 +13,47 @@ interface BroadcastObject {
   paddles: {
     ly: number;
     ry: number;
+    my?: number;
   };
   score: {
     p1: number;
     p2: number;
   };
   state: GameStateEnum;
+  hasMiddlePaddle: boolean;
 }
 
 class Game {
   private _id: string;
   private _player1: Player;
   private _player2: Player;
+  private _middlePaddle?: Paddle;
+  private _hasMiddlePaddle: boolean;
   private _watchers: Socket[] = [];
   private _ball: Ball;
   private _interval: NodeJS.Timer;
   private _endCallback: Function;
 
-  constructor(player1: Player, player2: Player, endCallback: Function) {
+  constructor(
+    player1: Player,
+    player2: Player,
+    endCallback: Function,
+    hasMiddlePaddle: boolean = false,
+  ) {
     this._id = this._generateId();
     this._player1 = player1;
     this._player2 = player2;
     this._ball = new Ball();
     this._interval = setInterval(() => this.play(), Constants.FPS);
     this._endCallback = endCallback;
+    this._hasMiddlePaddle = hasMiddlePaddle;
+    if (hasMiddlePaddle) {
+      this._middlePaddle = new Paddle(
+        Constants.MIDDLE_PADDLE_X,
+        Constants.MIDDLE_PADDLE_INIT_Y,
+        Constants.MIDDLE_PADDLE_MV_AMOUNT,
+      );
+    }
   }
 
   public restart(): void {
@@ -84,12 +102,14 @@ class Game {
       paddles: {
         ly: this._player1.getPaddle().getY(),
         ry: this._player2.getPaddle().getY(),
+        my: this._middlePaddle?.getY(),
       },
       score: {
         p1: this._player1.getScore(),
         p2: this._player2.getScore(),
       },
       state: this.getGameState(),
+      hasMiddlePaddle: this._hasMiddlePaddle,
     };
   }
 
@@ -125,7 +145,7 @@ class Game {
   }
 
   private async awardAndPause(player: Player): Promise<void> {
-    this._player1.award();
+    player.award();
     this._ball.reset();
     this.broadcastState();
     this._ball.pause();
@@ -133,12 +153,39 @@ class Game {
     this._ball.resume();
   }
 
-  public  play(): void{
+  public play(): void {
     if (this._ball.handleHCollision(this._player1.getPaddle())) {
-      this.awardAndPause(this._player1);
+      if (
+        this._player1
+          .getPaddle()
+          .hasCollisionWithCorner(this._ball.getX(), this._ball.getY())
+      ) {
+        console.log('hit corner');
+        this._ball.reverseAllAxis();
+      } else {
+        this.awardAndPause(this._player2);
+        this._middlePaddle?.reset();
+      }
     }
     if (this._ball.handleHCollision(this._player2.getPaddle())) {
-      this.awardAndPause(this._player2);
+      if (
+        this._player2
+          .getPaddle()
+          .hasCollisionWithCorner(this._ball.getX(), this._ball.getY())
+      ) {
+        // console.log('hit corner');
+        
+        this._ball.reverseAllAxis();
+      }
+      else
+      {
+        this.awardAndPause(this._player1);
+        this._middlePaddle?.reset();
+      }
+    }
+    if (this._hasMiddlePaddle && !this._ball.isPaused()) {
+      this._middlePaddle.autoMove();
+      this._ball.handleMiddlePaddleCollision(this._middlePaddle);
     }
     this._ball.handleVCollision(0, Constants.MAP_HEIGHT);
     this._ball.move();

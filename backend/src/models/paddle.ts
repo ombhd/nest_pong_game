@@ -5,17 +5,27 @@ class Paddle {
   private _x: number;
   private _yMvAmount: number;
 
-  constructor(x: number) {
-    this._y = Constants.PADDLE_INIT_Y;
+  constructor(
+    x: number,
+    y: number = Constants.PADDLE_INIT_Y,
+    yMvAmount: number = Constants.PADDLE_MV_AMOUNT_INIT,
+  ) {
+    this._y = y;
     this._x = x;
-    this._yMvAmount = Constants.PADDLE_MV_AMOUNT_INIT;
+    this._yMvAmount = yMvAmount;
   }
 
   public move(): void {
     if (this._yMvAmount === 0) return;
     this._y += this._yMvAmount;
-    if (this._y + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS > Constants.MAP_HEIGHT) {
-      this._y = Constants.MAP_HEIGHT - Constants.PADDLE_HEIGHT - Constants.PADDLE_BORDER_RADIUS;
+    if (
+      this._y + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS >
+      Constants.MAP_HEIGHT
+    ) {
+      this._y =
+        Constants.MAP_HEIGHT -
+        Constants.PADDLE_HEIGHT -
+        Constants.PADDLE_BORDER_RADIUS;
       this._yMvAmount = 0;
       return;
     }
@@ -24,6 +34,30 @@ class Paddle {
       this._yMvAmount = 0;
       return;
     }
+  }
+
+  public autoMove(): void {
+    this._y += this._yMvAmount;
+    if (
+      this._y + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS >
+      Constants.MAP_HEIGHT
+    ) {
+      this._y =
+        Constants.MAP_HEIGHT -
+        Constants.PADDLE_HEIGHT -
+        Constants.PADDLE_BORDER_RADIUS;
+      this._yMvAmount *= -1;
+      return;
+    }
+    if (this._y < Constants.PADDLE_BORDER_RADIUS) {
+      this._y = Constants.PADDLE_BORDER_RADIUS;
+      this._yMvAmount *= -1;
+      return;
+    }
+  }
+
+  public reset(y: number = Constants.MIDDLE_PADDLE_INIT_Y): void {
+    this._y = y;
   }
 
   public up(keydown: boolean): void {
@@ -54,13 +88,30 @@ class Paddle {
     return this._x + Constants.PADDLE_WIDTH >= Constants.MAP_WIDTH;
   }
 
-  public isAlignedWithBall(ball: Ball): boolean {
+  public isVerticallyAlignedWithY(y: number): boolean {
     return (
-      this._y + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS + (Math.abs(this._yMvAmount) * 3) >= ball.getY() &&
-      this._y - Constants.PADDLE_BORDER_RADIUS - (Math.abs(this._yMvAmount) * 3) <= ball.getY()
+      this._y + Constants.PADDLE_HEIGHT + Math.abs(this._yMvAmount) * 2 >=
+        y - Constants.BALL_RADIUS &&
+      this._y - Math.abs(this._yMvAmount) * 2 <= y + Constants.BALL_RADIUS
     );
   }
 
+  public hasCollisionWithCorner(x: number, y: number): boolean {
+    if (this.isRightSide()) {
+      return (
+        //  top left corner
+        x + Constants.BALL_RADIUS >= this._x &&
+        x + Constants.BALL_RADIUS <= this._x + Constants.PADDLE_WIDTH / 2 &&
+        ((y < this._y && y >= this._y - Constants.PADDLE_BORDER_RADIUS) ||
+          // bottom left corner
+          (y > this._y + Constants.PADDLE_HEIGHT &&
+            y - Constants.BALL_RADIUS <=
+              this._y +
+                Constants.PADDLE_HEIGHT +
+                Constants.PADDLE_BORDER_RADIUS))
+      );
+    }
+  }
 }
 
 export default Paddle;

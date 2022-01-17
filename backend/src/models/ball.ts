@@ -86,7 +86,7 @@ class Ball {
         this.isHCollision(-Constants.MAX_DISTANCE_FROM_MAP_EDGE, false)
       ) {
         return true;
-      } else if (!this._isScoring && paddle.isAlignedWithBall(this)) {
+      } else if (!this._isScoring && paddle.isVerticallyAlignedWithY(this._y)) {
         this.hitPaddle();
         return false;
       } else {
@@ -94,6 +94,29 @@ class Ball {
         return false;
       }
     }
+  }
+
+  public handleMiddlePaddleCollision(paddle: Paddle): boolean {
+    if (
+       (// ball is on the left side && ball is in collision with the middle paddle
+       (this._x < Constants.MAP_WIDTH / 2 && this._x + Constants.BALL_RADIUS >= paddle.getX()) ||
+       // ball is on the right side && ball is in collision with the middle paddle
+      (this._x > Constants.MAP_WIDTH / 2 && this._x - Constants.BALL_RADIUS <= paddle.getX())) &&
+      // ball is aligned with the middle paddle
+      this._y + Constants.BALL_RADIUS >= paddle.getY() &&
+      this._y - Constants.BALL_RADIUS <= paddle.getY() + Constants.PADDLE_HEIGHT + Constants.PADDLE_BORDER_RADIUS
+
+    ) {
+      console.log('middle paddle collision');
+      this._xdirection *= -1;
+      return true;
+    }
+    return false;
+  }
+
+  public reverseAllAxis(): void {
+    this._xdirection *= -1;
+    this._ydirection *= -1;
   }
 
   public pause(): void {

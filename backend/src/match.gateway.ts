@@ -17,7 +17,8 @@ export class MatchGateway
   private logger: Logger = new Logger('MatchGateway');
 
   private unique: Set<Socket> = new Set();
-  private queue: Socket[] = [];
+  private normalGameQueue: Socket[] = [];
+  private tripleGameQueue: Socket[] = [];
   private games: Game[] = [];
 
   handleConnection(client: Socket, ...args: any[]) {
@@ -26,17 +27,7 @@ export class MatchGateway
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`);
-    let index: number = this.queue.indexOf(client);
-    if (index > -1) {
-      let removedElem = this.queue.splice(index, 1);
-      this.logger.log(`Client removed from queue : ${removedElem[0].id}`);
-      this.unique.delete(removedElem[0]);
-    }
-    let game = this.games.find((gm) => gm.hasSocket(client));
-    this.handleMatchDisconnect(game, client);
-  }
-
-  handleMatchDisconnect(game: Game, client: Socket) {
+    const game = this.games.find((gm) => gm.hasSocket(client));
     if (game) {
       game.handlePlayerDisconnect(client);
       game.stop();
@@ -73,14 +64,24 @@ export class MatchGateway
     }
   }
 
-  private _removeOverGame(game: Game): void 
-  {
+  private _removeOverGame(game: Game): void {
     const sockets = game.getSockets();
     this.unique.delete(sockets[0]);
     this.unique.delete(sockets[1]);
     this.games.splice(this.games.indexOf(game), 1);
     console.log('removeOverGame : ' + game.getId());
     this.logger.log(`number of current games: ${this.games.length}`);
+  }
+
+  private _startNewGame(socketsArr: Socket[], payload: any): void {
+    this.games.push(
+      new Game(
+        new Player(socketsArr[0], false),
+        new Player(socketsArr[1], true),
+        this._removeOverGame.bind(this),
+        payload === 'triple',
+      ),
+    );
   }
 
   @SubscribeMessage('join_queue_match')
@@ -90,15 +91,13 @@ export class MatchGateway
     }
     this.logger.log(`Client ${client.id} joined queue`);
     this.unique.add(client);
-    this.queue.unshift(client);
-    if (this.queue.length > 1) {
-      this.games.push(
-        new Game(
-          new Player(this.queue.shift(), false),
-          new Player(this.queue.shift(), true),
-          this._removeOverGame.bind(this),
-        ),
-      );
+    if (payload === 'dual') {
+      if (this.normalGameQueue.push(client) > 1)
+        this._startNewGame([this.normalGameQueue.shift(), this.normalGameQueue.shift()], 'dual');
+    }
+    else if (payload === 'triple') {
+      if (this.tripleGameQueue.push(client) > 1)
+        this._startNewGame([this.tripleGameQueue.shift(), this.tripleGameQueue.shift()], 'triple');
     }
   }
 }
