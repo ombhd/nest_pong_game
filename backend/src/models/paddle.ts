@@ -91,27 +91,11 @@ class Paddle {
   public isVerticallyAlignedWithY(y: number): boolean {
     return (
       this._y + Constants.PADDLE_HEIGHT + Math.abs(this._yMvAmount) * 2 >=
-        y - Constants.BALL_RADIUS &&
-      this._y - Math.abs(this._yMvAmount) * 2 <= y + Constants.BALL_RADIUS
+        y - (Constants.BALL_RADIUS * 2) &&
+      this._y - Math.abs(this._yMvAmount) * 2 <= y + (Constants.BALL_RADIUS * 2)
     );
   }
 
-  public hasCollisionWithCorner(x: number, y: number): boolean {
-    if (this.isRightSide()) {
-      return (
-        //  top left corner
-        x + Constants.BALL_RADIUS >= this._x &&
-        x + Constants.BALL_RADIUS <= this._x + Constants.PADDLE_WIDTH / 2 &&
-        ((y < this._y && y >= this._y - Constants.PADDLE_BORDER_RADIUS) ||
-          // bottom left corner
-          (y > this._y + Constants.PADDLE_HEIGHT &&
-            y - Constants.BALL_RADIUS <=
-              this._y +
-                Constants.PADDLE_HEIGHT +
-                Constants.PADDLE_BORDER_RADIUS))
-      );
-    }
-  }
 }
 
 export default Paddle;
