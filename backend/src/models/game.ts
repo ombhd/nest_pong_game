@@ -155,33 +155,12 @@ class Game {
 
   public play(): void {
     if (this._ball.handleHCollision(this._player1.getPaddle())) {
-      if (
-        this._player1
-          .getPaddle()
-          .hasCollisionWithCorner(this._ball.getX(), this._ball.getY())
-      ) {
-        console.log('hit corner');
-        this._ball.reverseAllAxis();
-      } else {
         this.awardAndPause(this._player2);
         this._middlePaddle?.reset();
-      }
     }
     if (this._ball.handleHCollision(this._player2.getPaddle())) {
-      if (
-        this._player2
-          .getPaddle()
-          .hasCollisionWithCorner(this._ball.getX(), this._ball.getY())
-      ) {
-        // console.log('hit corner');
-        
-        this._ball.reverseAllAxis();
-      }
-      else
-      {
         this.awardAndPause(this._player1);
         this._middlePaddle?.reset();
-      }
     }
     if (this._hasMiddlePaddle && !this._ball.isPaused()) {
       this._middlePaddle.autoMove();

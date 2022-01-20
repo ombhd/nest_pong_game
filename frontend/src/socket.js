@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 
 // const url = window.origin;
 
-const socket = io("http://10.12.4.1:5000", {
+const socket = io("http://localhost:5000", {
 	reconnectionDelayMax: 10000,
 	auth: {
 	  token: "123"
