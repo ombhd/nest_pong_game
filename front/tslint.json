@@ -1,0 +1,16 @@
+{
+	"parser": "@typescript-eslint/parser",
+	"plugins": ["@typescript-eslint"],
+	"extends": ["tslint:recommended", "tslint-config-prettier"],
+	"rules": {
+		"no-console": false,
+		"callable-types": false,
+		"no-empty-interface": false,
+		"array-type": false,
+		"no-unused-expression": false,
+		"no-namespace": false,
+		"prefer-rest-params": 0,
+		"unified-signatures": false,
+		"max-classes-per-file": false
+	}
+}
