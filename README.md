@@ -1,1 +1,2 @@
-# nest_pong_game
+# Pong
+a Pong game built using ReactJS and NestJS.
