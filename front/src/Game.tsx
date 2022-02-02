@@ -12,10 +12,12 @@ const socket = io("http://localhost:5000", {
 	}
   });
 
-const PADDLE_WIDTH = 30;
-const PADDLE_HEIGHT = 150;
 const WIDTH = 1100;
 const HEIGHT = 600;
+const PADDLE_HEIGHT = HEIGHT / 6;
+const PADDLE_WIDTH = 20;
+const L_PADDLE_X = 0;
+const R_PADDLE_X = WIDTH - PADDLE_WIDTH;
 
 class Circle
 {
@@ -46,11 +48,6 @@ class Circle
 
 class Ball extends Circle
 {
-	update(x: number, y: number)
-	{
-		this._x += x;
-		this._y = y;
-	}
 }
 
 class Rect
@@ -84,10 +81,16 @@ class Rect
 
 class Paddle extends Rect
 {
-	update(x: number, y: number)
+	drawWithCircle()
 	{
-		this._x = x;
-		this._y = y;
+		const upCircle = new Circle(this._ctx, this._x + PADDLE_WIDTH / 2,
+			this._y, PADDLE_WIDTH / 2, this._color);
+		const downCircle = new Circle(this._ctx, this._x + PADDLE_WIDTH / 2,
+			this._y + PADDLE_HEIGHT, PADDLE_WIDTH / 2, this._color);
+
+		this.draw();
+		upCircle.draw();
+		downCircle.draw();
 	}
 }
 
@@ -104,7 +107,6 @@ interface IFrame
 function Game()
 {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
-
 	const [frame, setFrame] = useState<IFrame | null>(null);
 
 	socket.on("state", function (newFrame : any)
@@ -123,31 +125,22 @@ function Game()
 
 			if (ctx != null && frame != null)
 			{
-				const paddleLeft = new Paddle(ctx, 0, ctx.canvas.height / 4,
-					PADDLE_WIDTH, PADDLE_HEIGHT, "rgb(25 109 180)");
-				const paddleRight = new Paddle(ctx, ctx.canvas.width -
-					PADDLE_WIDTH, ctx.canvas.height / 2 - PADDLE_HEIGHT,
-					PADDLE_WIDTH, PADDLE_HEIGHT, "black");
-				const ball = new Ball(ctx, ctx.canvas.width / 2,
-					ctx.canvas.height / 2, 10, "black");
 				const background = new Rect(ctx, 0, 0, ctx.canvas.width,
 					ctx.canvas.height, "rgb(84 209 136)");
 
-				const gameloop = function ()
-				{
-					ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-					//background.draw();
+				background.draw();
+				
+				const paddleLeft = new Paddle(ctx, L_PADDLE_X, frame.paddles.ly,
+					PADDLE_WIDTH, PADDLE_HEIGHT, "rgb(25 109 180)");
+				const paddleRight = new Paddle(ctx, R_PADDLE_X,
+					frame.paddles.ry,
+					PADDLE_WIDTH, PADDLE_HEIGHT, "black");
+				const ball = new Ball(ctx,  frame.ball.x, frame.ball.y
+					, 10, "black");
 
-					ball.draw();
-					ball.update(frame.ball.x, frame.ball.y);
-
-					//paddleLeft.draw();
-					//paddleLeft.update();
-
-					//paddleRight.draw();
-					//paddleRight.update();
-				}
-			gameloop();
+				paddleLeft.drawWithCircle();
+				paddleRight.drawWithCircle();
+				ball.draw();
 			}	
 		}, [frame]);
 
@@ -155,7 +148,8 @@ function Game()
 		<div>
 		<canvas width={WIDTH} height={HEIGHT} ref={canvasRef}/>
 		<br/>
-		<button onClick={() => socket.emit("join_queue_match", "dual")}>start game</button>
+		<button onClick={() => socket.emit("join_queue_match", "dual")}>
+		start game</button>
 		<button>start game(with obstacle)</button>
 		</div>
 	);
