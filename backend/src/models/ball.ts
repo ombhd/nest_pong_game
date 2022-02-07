@@ -103,7 +103,7 @@ class Ball {
         this._x + Constants.BALL_RADIUS > paddle.getX()) ||
         // ball is on the right side && ball is in collision with the middle paddle
         (this._x > Constants.MAP_WIDTH / 2 &&
-          this._x - Constants.BALL_RADIUS < paddle.getX())) &&
+          this._x - Constants.BALL_RADIUS < paddle.getX() + Constants.PADDLE_WIDTH)) &&
       // ball is aligned with the middle paddle
       this._y + Constants.BALL_RADIUS >= paddle.getY() &&
       this._y - Constants.BALL_RADIUS <=
